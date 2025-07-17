@@ -28,10 +28,6 @@ RESOURCE_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
 PROCESSING_THREADS = 6
 OPENAI_REQUEST_TIMEOUT = 60
 
-openai.api_type = "azure"
-openai.api_key = API_KEY
-openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-05-15"
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

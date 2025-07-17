@@ -7,7 +7,11 @@ import threading
 import logging
 import argparse
 import dotenv
-import openai
+from openai import AzureOpenAI
+
+client = AzureOpenAI(api_key=API_KEY,
+azure_endpoint=RESOURCE_ENDPOINT,
+api_version="2023-07-01-preview")
 from tenacity import (
     retry,
     wait_random_exponential,
@@ -28,10 +32,6 @@ MAX_TOKENS = 512
 PROCESSOR_THREADS = 10
 OPENAI_REQUEST_TIMEOUT = 30
 
-openai.api_type = "azure"
-openai.api_key = API_KEY
-openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-07-01-preview"
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -90,17 +90,15 @@ def chatgpt_summary(text):
         {"role": "user", "content": text},
     ]
 
-    response = openai.ChatCompletion.create(
-        engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
-        messages=messages,
-        temperature=0.7,
-        max_tokens=MAX_TOKENS,
-        top_p=0.0,
-        frequency_penalty=0,
-        presence_penalty=0,
-        stop=None,
-        request_timeout=OPENAI_REQUEST_TIMEOUT,
-    )
+    response = client.chat.completions.create(model=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
+    messages=messages,
+    temperature=0.7,
+    max_tokens=MAX_TOKENS,
+    top_p=0.0,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=None,
+    request_timeout=OPENAI_REQUEST_TIMEOUT)
 
     # print(response)
 

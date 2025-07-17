@@ -9,7 +9,11 @@ import queue
 import time
 import argparse
 import dotenv
-import openai
+from openai import AzureOpenAI
+
+client = AzureOpenAI(api_key=API_KEY,
+azure_endpoint=RESOURCE_ENDPOINT,
+api_version="2023-07-01-preview")
 from openai.embeddings_utils import get_embedding
 from rich.progress import Progress
 from tenacity import (
@@ -39,10 +43,6 @@ AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
 )
 
 
-openai.api_type = "azure"
-openai.api_key = API_KEY
-openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-07-01-preview"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--folder")
@@ -112,26 +112,24 @@ def get_speaker_info(text):
     function_name = None
     arguments = None
 
-    response_1 = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an AI assistant that can extract speaker names from text as a list of comma separated names. Try and extract the speaker names from the title. Speaker names are usually less than 3 words long.",
-            },
-            {"role": "user", "content": text},
-        ],
-        functions=openai_functions,
-        max_tokens=OPENAI_MAX_TOKENS,
-        engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
-        request_timeout=OPENAI_REQUEST_TIMEOUT,
-        function_call={"name": "get_speaker_name"},
-        temperature=0.0,
-    )
+    response_1 = client.chat.completions.create(model="gpt-3.5-turbo-0613",
+    messages=[
+        {
+            "role": "system",
+            "content": "You are an AI assistant that can extract speaker names from text as a list of comma separated names. Try and extract the speaker names from the title. Speaker names are usually less than 3 words long.",
+        },
+        {"role": "user", "content": text},
+    ],
+    functions=openai_functions,
+    max_tokens=OPENAI_MAX_TOKENS,
+    model=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
+    request_timeout=OPENAI_REQUEST_TIMEOUT,
+    function_call={"name": "get_speaker_name"},
+    temperature=0.0)
 
     # The assistant's response includes a function call. We extract the arguments from this function call
 
-    result = response_1.get("choices")[0].get("message")
+    result = response_1.choices[0].message
 
     if result.get("function_call"):
         function_name = result.get("function_call").get("name")
